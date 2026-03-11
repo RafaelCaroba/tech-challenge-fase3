@@ -1,6 +1,7 @@
 package com.caroba.fiap.hospital.agendamento_service.service;
 
 import com.caroba.fiap.hospital.agendamento_service.dto.AtualizarConsultaRequestDTO;
+import com.caroba.fiap.hospital.agendamento_service.dto.ConsultaResponseDTO;
 import com.caroba.fiap.hospital.agendamento_service.dto.CriarConsultaRequestDTO;
 import com.caroba.fiap.hospital.agendamento_service.model.Consulta;
 import com.caroba.fiap.hospital.agendamento_service.model.Role;
@@ -27,7 +28,7 @@ public class ConsultaService {
     }
 
     @Transactional
-    public Consulta criarConsulta(CriarConsultaRequestDTO dto){
+    public ConsultaResponseDTO criarConsulta(@Valid CriarConsultaRequestDTO dto){
         Usuario paciente = usuarioRepository.findById((dto.pacienteId()))
                 .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
 
@@ -51,23 +52,35 @@ public class ConsultaService {
         consulta.setDescricao(dto.descricao());
         consulta.setStatus(StatusConsulta.AGENDADA);
 
-        return repository.save(consulta);
+        consulta = repository.save(consulta);
+
+        ConsultaResponseDTO responseDTO = toResponseDTO(consulta);
+
+        return responseDTO;
     }
 
-    public List<Consulta> listar(){
-        return repository.findAll();
+    public List<ConsultaResponseDTO> listar(){
+        return repository
+                .findAll()
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
     }
 
-    public List<Consulta> listarConsultasDoPaciente(Authentication authentication) {
+    public List<ConsultaResponseDTO> listarConsultasDoPaciente(Authentication authentication) {
 
         String email = authentication.getName();
         Usuario paciente = usuarioRepository.findByEmail(email)
                         .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
 
-        return repository.findAllByPaciente(paciente);
+        return repository.findAllByPaciente(paciente)
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
     }
 
-    public Consulta atualizarConsulta(@Valid AtualizarConsultaRequestDTO dto, Long id) {
+    @Transactional
+    public ConsultaResponseDTO atualizarConsulta(AtualizarConsultaRequestDTO dto, Long id) {
         Consulta consulta = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Consulta não encontrada"));
 
@@ -88,7 +101,20 @@ public class ConsultaService {
             consulta.setStatus(dto.status());
         }
 
-        return repository.save(consulta);
+        consulta = repository.save(consulta);
+
+        return toResponseDTO(consulta);
+    }
+
+    private ConsultaResponseDTO toResponseDTO(Consulta consulta) {
+        return new ConsultaResponseDTO(
+                consulta.getId(),
+                consulta.getPaciente().getNome(),
+                consulta.getMedico().getNome(),
+                consulta.getDataConsulta(),
+                consulta.getDescricao(),
+                consulta.getStatus()
+        );
     }
 
     // TODO: definir uma regra para consultas que forem canceladas

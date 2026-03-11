@@ -1,6 +1,7 @@
 package com.caroba.fiap.hospital.agendamento_service.controller;
 
 import com.caroba.fiap.hospital.agendamento_service.dto.AtualizarConsultaRequestDTO;
+import com.caroba.fiap.hospital.agendamento_service.dto.ConsultaResponseDTO;
 import com.caroba.fiap.hospital.agendamento_service.dto.CriarConsultaRequestDTO;
 import com.caroba.fiap.hospital.agendamento_service.model.Consulta;
 import com.caroba.fiap.hospital.agendamento_service.service.ConsultaService;
@@ -26,42 +27,41 @@ public class ConsultaController {
     // CRIAR CONSULTA - MÉDICO/ENFERMEIRO
     @PreAuthorize("hasAnyRole('MEDICO', 'ENFERMEIRO')")
     @PostMapping
-    public ResponseEntity<Consulta> criar(@Valid @RequestBody CriarConsultaRequestDTO dto){
-        Consulta consulta = service.criarConsulta(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(consulta);
+    public ResponseEntity<ConsultaResponseDTO> criar(@Valid @RequestBody CriarConsultaRequestDTO dto){
+        ConsultaResponseDTO consultaResponseDTO = service.criarConsulta(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(consultaResponseDTO);
     }
 
-    // REGRA POR ROLE:
-    // ENFERMEIRO - TODAS
     @PreAuthorize("hasAnyRole('MEDICO', 'ENFERMEIRO')")
     @GetMapping
-    public ResponseEntity<List<Consulta>> listarConsultas(){
-        List<Consulta> consultas = service.listar();
+    public ResponseEntity<List<ConsultaResponseDTO>> listarConsultas(){
+        List<ConsultaResponseDTO> consultas = service.listar();
 
         return ResponseEntity.ok(consultas);
     }
 
     // PACIENTE - APENAS AS PRÓPRIAS
-    @PreAuthorize("hasAnyRole('PACIENTE')")
+    @PreAuthorize("hasRole('PACIENTE')")
     @GetMapping("/minhas")
-    public ResponseEntity<List<Consulta>> listarConsultasDoPaciente(Authentication authentication) {
+    public ResponseEntity<List<ConsultaResponseDTO>> listarConsultasDoPaciente(Authentication authentication) {
 
-        List<Consulta> consultas = service.listarConsultasDoPaciente(authentication);
+        List<ConsultaResponseDTO> consultas = service.listarConsultasDoPaciente(authentication);
 
         return ResponseEntity.ok(consultas);
     }
 
     // APENAS MÉDICOS PODEM ALTERAR
     @PreAuthorize("hasAnyRole('MEDICO')")
-    @PutMapping("/{id}")
-    public ResponseEntity<Consulta> editarConsulta(@RequestBody @Valid AtualizarConsultaRequestDTO dto,
+    @PatchMapping("/{id}")
+    public ResponseEntity<ConsultaResponseDTO> editarConsulta(@RequestBody @Valid AtualizarConsultaRequestDTO dto,
                                                    @RequestParam Long id) {
-        Consulta consulta = service.atualizarConsulta(dto, id);
+        ConsultaResponseDTO consulta = service.atualizarConsulta(dto, id);
 
         return ResponseEntity.ok(consulta);
     }
 
     // PATCH /consultas/{id}/cancelar
+    // TODO: Endpoint de cancelar consulta
     @PatchMapping("/{id}/cancelar")
     public Consulta cancelarConsulta(@RequestParam Long id) {
         return null;
