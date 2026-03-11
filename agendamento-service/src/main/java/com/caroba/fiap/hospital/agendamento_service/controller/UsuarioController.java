@@ -1,6 +1,7 @@
 package com.caroba.fiap.hospital.agendamento_service.controller;
 
 import com.caroba.fiap.hospital.agendamento_service.dto.CriarUsuarioRequestDTO;
+import com.caroba.fiap.hospital.agendamento_service.dto.UsuarioResponseDTO;
 import com.caroba.fiap.hospital.agendamento_service.model.Usuario;
 import com.caroba.fiap.hospital.agendamento_service.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -22,18 +23,18 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> criar(@RequestBody @Valid CriarUsuarioRequestDTO dto){
-        Usuario usuario = service.criarUsuario(dto);
+    public ResponseEntity<UsuarioResponseDTO> criar(@RequestBody @Valid CriarUsuarioRequestDTO dto){
+        UsuarioResponseDTO usuario = service.criarUsuario(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
     }
 
     @GetMapping
-    public List<Usuario> listar(){
+    public List<UsuarioResponseDTO> listar(){
         return service.listarUsuarios();
     }
 
     @GetMapping("/{id}")
-    public Usuario buscar(@PathVariable Long id){
+    public UsuarioResponseDTO buscar(@PathVariable Long id){
         return service.buscarPorId(id);
     }
 

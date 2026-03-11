@@ -1,6 +1,7 @@
 package com.caroba.fiap.hospital.agendamento_service.service;
 
 import com.caroba.fiap.hospital.agendamento_service.dto.CriarUsuarioRequestDTO;
+import com.caroba.fiap.hospital.agendamento_service.dto.UsuarioResponseDTO;
 import com.caroba.fiap.hospital.agendamento_service.model.Usuario;
 import com.caroba.fiap.hospital.agendamento_service.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,7 +20,7 @@ public class UsuarioService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public Usuario criarUsuario(CriarUsuarioRequestDTO dto){
+    public UsuarioResponseDTO criarUsuario(CriarUsuarioRequestDTO dto){
         Usuario usuario = new Usuario();
         usuario.setNome(dto.nome());
         usuario.setEmail(dto.email());
@@ -27,19 +28,34 @@ public class UsuarioService {
         usuario.setRole(dto.role());
         usuario.setAtivo(true);
 
-        return repository.save(usuario);
+        return toResponseDTO(repository.save(usuario));
     }
 
-    public List<Usuario> listarUsuarios(){
-        return repository.findAll();
+    public List<UsuarioResponseDTO> listarUsuarios(){
+        return repository.findAll()
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
     }
 
-    public Usuario buscarPorId(Long id){
-        return repository.findById(id)
+    public UsuarioResponseDTO buscarPorId(Long id){
+        Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        return toResponseDTO(usuario);
     }
 
     public void deletarPorId(Long id) {
         repository.deleteById(id);
+    }
+
+    private UsuarioResponseDTO toResponseDTO(Usuario usuario) {
+        return new UsuarioResponseDTO(
+                usuario.getId(),
+                usuario.getNome(),
+                usuario.getEmail(),
+                usuario.getRole(),
+                usuario.getAtivo()
+        );
     }
 }
