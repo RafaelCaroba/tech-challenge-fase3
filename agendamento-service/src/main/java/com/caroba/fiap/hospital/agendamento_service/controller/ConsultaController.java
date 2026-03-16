@@ -54,7 +54,7 @@ public class ConsultaController {
     @PreAuthorize("hasAnyRole('MEDICO')")
     @PatchMapping("/{id}")
     public ResponseEntity<ConsultaResponseDTO> editarConsulta(@RequestBody @Valid AtualizarConsultaRequestDTO dto,
-                                                   @RequestParam Long id) {
+                                                   @PathVariable Long id) {
         ConsultaResponseDTO consulta = service.atualizarConsulta(dto, id);
 
         return ResponseEntity.ok(consulta);
