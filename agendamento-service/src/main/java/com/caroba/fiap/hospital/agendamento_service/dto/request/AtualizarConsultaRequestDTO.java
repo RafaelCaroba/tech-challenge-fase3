@@ -1,4 +1,4 @@
-package com.caroba.fiap.hospital.agendamento_service.dto;
+package com.caroba.fiap.hospital.agendamento_service.dto.request;
 
 import com.caroba.fiap.hospital.agendamento_service.model.StatusConsulta;
 
