@@ -1,8 +1,8 @@
 package com.caroba.fiap.hospital.agendamento_service.controller;
 
-import com.caroba.fiap.hospital.agendamento_service.dto.AtualizarConsultaRequestDTO;
-import com.caroba.fiap.hospital.agendamento_service.dto.ConsultaResponseDTO;
-import com.caroba.fiap.hospital.agendamento_service.dto.CriarConsultaRequestDTO;
+import com.caroba.fiap.hospital.agendamento_service.dto.request.AtualizarConsultaRequestDTO;
+import com.caroba.fiap.hospital.agendamento_service.dto.response.ConsultaResponseDTO;
+import com.caroba.fiap.hospital.agendamento_service.dto.request.CriarConsultaRequestDTO;
 import com.caroba.fiap.hospital.agendamento_service.model.Consulta;
 import com.caroba.fiap.hospital.agendamento_service.service.ConsultaService;
 import jakarta.validation.Valid;

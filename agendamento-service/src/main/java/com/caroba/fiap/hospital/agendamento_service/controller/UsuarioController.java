@@ -1,13 +1,11 @@
 package com.caroba.fiap.hospital.agendamento_service.controller;
 
-import com.caroba.fiap.hospital.agendamento_service.dto.CriarUsuarioRequestDTO;
-import com.caroba.fiap.hospital.agendamento_service.dto.UsuarioResponseDTO;
-import com.caroba.fiap.hospital.agendamento_service.model.Usuario;
+import com.caroba.fiap.hospital.agendamento_service.dto.request.CriarUsuarioRequestDTO;
+import com.caroba.fiap.hospital.agendamento_service.dto.response.UsuarioResponseDTO;
 import com.caroba.fiap.hospital.agendamento_service.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

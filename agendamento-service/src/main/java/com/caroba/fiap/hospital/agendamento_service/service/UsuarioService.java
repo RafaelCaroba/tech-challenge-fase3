@@ -1,7 +1,8 @@
 package com.caroba.fiap.hospital.agendamento_service.service;
 
-import com.caroba.fiap.hospital.agendamento_service.dto.CriarUsuarioRequestDTO;
-import com.caroba.fiap.hospital.agendamento_service.dto.UsuarioResponseDTO;
+import com.caroba.fiap.hospital.agendamento_service.dto.request.CriarUsuarioRequestDTO;
+import com.caroba.fiap.hospital.agendamento_service.dto.response.UsuarioResponseDTO;
+import com.caroba.fiap.hospital.agendamento_service.exception.ResourceNotFoundException;
 import com.caroba.fiap.hospital.agendamento_service.model.Usuario;
 import com.caroba.fiap.hospital.agendamento_service.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,7 +41,7 @@ public class UsuarioService {
 
     public UsuarioResponseDTO buscarPorId(Long id){
         Usuario usuario = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         return toResponseDTO(usuario);
     }

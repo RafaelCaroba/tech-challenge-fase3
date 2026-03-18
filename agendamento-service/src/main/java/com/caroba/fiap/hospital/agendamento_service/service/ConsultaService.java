@@ -1,12 +1,13 @@
 package com.caroba.fiap.hospital.agendamento_service.service;
 
-import com.caroba.fiap.hospital.agendamento_service.dto.AtualizarConsultaRequestDTO;
-import com.caroba.fiap.hospital.agendamento_service.dto.ConsultaResponseDTO;
-import com.caroba.fiap.hospital.agendamento_service.dto.CriarConsultaRequestDTO;
-import com.caroba.fiap.hospital.agendamento_service.model.Consulta;
-import com.caroba.fiap.hospital.agendamento_service.model.Role;
-import com.caroba.fiap.hospital.agendamento_service.model.StatusConsulta;
-import com.caroba.fiap.hospital.agendamento_service.model.Usuario;
+import com.caroba.fiap.hospital.agendamento_service.dto.event.ConsultaEvent;
+import com.caroba.fiap.hospital.agendamento_service.dto.request.AtualizarConsultaRequestDTO;
+import com.caroba.fiap.hospital.agendamento_service.dto.response.ConsultaResponseDTO;
+import com.caroba.fiap.hospital.agendamento_service.dto.request.CriarConsultaRequestDTO;
+import com.caroba.fiap.hospital.agendamento_service.exception.BusinessException;
+import com.caroba.fiap.hospital.agendamento_service.exception.ResourceNotFoundException;
+import com.caroba.fiap.hospital.agendamento_service.model.*;
+import com.caroba.fiap.hospital.agendamento_service.producer.ConsultaEventProducer;
 import com.caroba.fiap.hospital.agendamento_service.repository.ConsultaRepository;
 import com.caroba.fiap.hospital.agendamento_service.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
@@ -21,28 +22,30 @@ public class ConsultaService {
 
     private final ConsultaRepository repository;
     private final UsuarioRepository usuarioRepository;
+    private final ConsultaEventProducer consultaEventProducer;
 
-    public ConsultaService(ConsultaRepository consultaRepository, UsuarioRepository usuarioRepository) {
+    public ConsultaService(ConsultaRepository consultaRepository, UsuarioRepository usuarioRepository, ConsultaEventProducer consultaEventProducer) {
         this.repository = consultaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.consultaEventProducer = consultaEventProducer;
     }
 
     @Transactional
     public ConsultaResponseDTO criarConsulta(@Valid CriarConsultaRequestDTO dto){
         Usuario paciente = usuarioRepository.findById((dto.pacienteId()))
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
 
         Usuario medico = usuarioRepository.findById(dto.medicoId())
-                .orElseThrow(() -> new RuntimeException("Médico não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado"));
 
         if (paciente.getRole() != Role.PACIENTE) {
-            throw new RuntimeException("Usuário informado não é um Paciente.");
+            throw new BusinessException("Usuário informado não é um Paciente.");
         }
         if (medico.getRole() != Role.MEDICO) {
-            throw new RuntimeException("Usuário informado não é um Médico.");
+            throw new BusinessException("Usuário informado não é um Médico.");
         }
         if (repository.existsByMedicoAndDataConsulta(medico, dto.dataConsulta())) {
-            throw new RuntimeException("Médico já possui consulta nessa data e horário");
+            throw new BusinessException("Médico já possui consulta nessa data e horário");
         }
 
         Consulta consulta = new Consulta();
@@ -53,6 +56,17 @@ public class ConsultaService {
         consulta.setStatus(StatusConsulta.AGENDADA);
 
         consulta = repository.save(consulta);
+
+        ConsultaEvent event = new ConsultaEvent(
+                EventType.CONSULTA_CRIADA,
+                consulta.getId(),
+                consulta.getPaciente().getId(),
+                consulta.getMedico().getId(),
+                consulta.getDataConsulta(),
+                consulta.getStatus().name()
+        );
+
+        consultaEventProducer.enviarEvento(event);
 
         ConsultaResponseDTO responseDTO = toResponseDTO(consulta);
 
@@ -71,7 +85,7 @@ public class ConsultaService {
 
         String email = authentication.getName();
         Usuario paciente = usuarioRepository.findByEmail(email)
-                        .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                        .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
 
         return repository.findAllByPaciente(paciente)
                 .stream()
@@ -82,13 +96,13 @@ public class ConsultaService {
     @Transactional
     public ConsultaResponseDTO atualizarConsulta(AtualizarConsultaRequestDTO dto, Long id) {
         Consulta consulta = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Consulta não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
 
         if (dto.dataConsulta() != null && !dto.dataConsulta().equals(consulta.getDataConsulta())) {
             if (repository.existsByMedicoAndDataConsulta(
                     consulta.getMedico(), dto.dataConsulta()))
             {
-                throw new RuntimeException("Médico já possui consulta agendada nesse horário");
+                throw new BusinessException("Médico já possui consulta agendada nesse horário");
             }
             consulta.setDataConsulta(dto.dataConsulta());
         }
@@ -103,6 +117,21 @@ public class ConsultaService {
 
         consulta = repository.save(consulta);
 
+        EventType tipo = consulta.getStatus() == StatusConsulta.CANCELADA
+               ? EventType.CONSULTA_CANCELADA
+                : EventType.CONSULTA_ATUALIZADA;
+
+        ConsultaEvent event = new ConsultaEvent(
+                tipo,
+                consulta.getId(),
+                consulta.getPaciente().getId(),
+                consulta.getMedico().getId(),
+                consulta.getDataConsulta(),
+                consulta.getStatus().name()
+        );
+
+        consultaEventProducer.enviarEvento(event);
+
         return toResponseDTO(consulta);
     }
 
@@ -116,6 +145,4 @@ public class ConsultaService {
                 consulta.getStatus()
         );
     }
-
-    // TODO: definir uma regra para consultas que forem canceladas
 }
