@@ -1,12 +1,13 @@
-package com.caroba.fiap.hospital.agendamento_service.dto;
+package com.caroba.fiap.hospital.agendamento_service.dto.response;
 
 import com.caroba.fiap.hospital.agendamento_service.model.StatusConsulta;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
-public record AtualizarConsultaRequestDTO(
+public record ConsultaResponseDTO(
+        Long id,
+        String pacienteNome,
+        String medicoNome,
         LocalDateTime dataConsulta,
         String descricao,
         StatusConsulta status

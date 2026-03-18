@@ -1,4 +1,4 @@
-package com.caroba.fiap.hospital.agendamento_service.dto;
+package com.caroba.fiap.hospital.agendamento_service.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 

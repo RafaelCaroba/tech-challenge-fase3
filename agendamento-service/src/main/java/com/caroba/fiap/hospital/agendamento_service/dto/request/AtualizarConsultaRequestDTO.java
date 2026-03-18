@@ -4,10 +4,7 @@ import com.caroba.fiap.hospital.agendamento_service.model.StatusConsulta;
 
 import java.time.LocalDateTime;
 
-public record ConsultaResponseDTO(
-        Long id,
-        String pacienteNome,
-        String medicoNome,
+public record AtualizarConsultaRequestDTO(
         LocalDateTime dataConsulta,
         String descricao,
         StatusConsulta status
