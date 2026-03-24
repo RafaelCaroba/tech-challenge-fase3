@@ -4,11 +4,13 @@ import com.caroba.fiap.hospital.history_service.config.RabbitMQConfig;
 import com.caroba.fiap.hospital.history_service.event.ConsultaEvent;
 import com.caroba.fiap.hospital.history_service.model.Historico;
 import com.caroba.fiap.hospital.history_service.repository.HistoricoRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Component
 public class ConsultaEventConsumer {
 
@@ -21,6 +23,8 @@ public class ConsultaEventConsumer {
 
     @RabbitListener(queues = RabbitMQConfig.QUEUE)
     public void consumirEvento(ConsultaEvent event) {
+        log.info("Evento recebido - tipo={}, consultaId={}",
+                event.getType(), event.getConsultaId());
 
         Historico historico = new Historico();
         historico.setConsultaId(event.getConsultaId());
@@ -29,6 +33,6 @@ public class ConsultaEventConsumer {
 
         historicoRepository.save(historico);
 
-        System.out.println("HISTÓRICO SALVO: " + event.getConsultaId());
+        log.info("Histórico salvo - consultaId={}", event.getConsultaId());
     }
 }

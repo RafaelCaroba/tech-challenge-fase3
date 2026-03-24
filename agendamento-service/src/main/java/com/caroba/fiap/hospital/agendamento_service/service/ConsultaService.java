@@ -12,11 +12,13 @@ import com.caroba.fiap.hospital.agendamento_service.repository.ConsultaRepositor
 import com.caroba.fiap.hospital.agendamento_service.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class ConsultaService {
 
@@ -32,19 +34,31 @@ public class ConsultaService {
 
     @Transactional
     public ConsultaResponseDTO criarConsulta(@Valid CriarConsultaRequestDTO dto){
+        log.info("Criando consulta - pacienteId={}, medicoId={}, data={}",
+                dto.pacienteId(), dto.medicoId(), dto.dataConsulta());
+
         Usuario paciente = usuarioRepository.findById((dto.pacienteId()))
-                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+                .orElseThrow(() -> {
+                    log.warn("Tentativa de criar consulta com paciente inválido - id={}", dto.pacienteId());
+                   return new ResourceNotFoundException("Paciente não encontrado");
+                });
 
         Usuario medico = usuarioRepository.findById(dto.medicoId())
-                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado"));
+                .orElseThrow(() -> {
+                    log.warn("Tentativa de criar consulta com paciente inválido - id={}", dto.pacienteId());
+                    return new ResourceNotFoundException("Médico não encontrado");
+                });
 
         if (paciente.getRole() != Role.PACIENTE) {
+            log.warn("Tentativa de criar consulta com paciente inválido - id={}", dto.pacienteId());
             throw new BusinessException("Usuário informado não é um Paciente.");
         }
         if (medico.getRole() != Role.MEDICO) {
+            log.warn("Tentativa de criar consulta com paciente inválido - id={}", dto.pacienteId());
             throw new BusinessException("Usuário informado não é um Médico.");
         }
         if (repository.existsByMedicoAndDataConsulta(medico, dto.dataConsulta())) {
+            log.warn("Tentativa de criar consulta com paciente inválido - id={}", dto.pacienteId());
             throw new BusinessException("Médico já possui consulta nessa data e horário");
         }
 
@@ -56,6 +70,7 @@ public class ConsultaService {
         consulta.setStatus(StatusConsulta.AGENDADA);
 
         consulta = repository.save(consulta);
+        log.info("Consulta criada com sucesso - id={}", consulta.getId());
 
         ConsultaEvent event = new ConsultaEvent(
                 EventType.CONSULTA_CRIADA,
@@ -67,10 +82,10 @@ public class ConsultaService {
         );
 
         consultaEventProducer.enviarEvento(event);
+        log.info("Evento enviado - tipo={}, consultaId={}",
+                event.getType(), event.getConsultaId());
 
-        ConsultaResponseDTO responseDTO = toResponseDTO(consulta);
-
-        return responseDTO;
+        return toResponseDTO(consulta);
     }
 
     public List<ConsultaResponseDTO> listar(){
@@ -116,6 +131,7 @@ public class ConsultaService {
         }
 
         consulta = repository.save(consulta);
+        log.info("Atualizando consulta - id={}", id);
 
         EventType tipo = consulta.getStatus() == StatusConsulta.CANCELADA
                ? EventType.CONSULTA_CANCELADA
@@ -130,7 +146,10 @@ public class ConsultaService {
                 consulta.getStatus().name()
         );
 
+
         consultaEventProducer.enviarEvento(event);
+        log.info("Evento enviado - tipo={}, consultaId={}",
+                event.getType(), event.getConsultaId());
 
         return toResponseDTO(consulta);
     }

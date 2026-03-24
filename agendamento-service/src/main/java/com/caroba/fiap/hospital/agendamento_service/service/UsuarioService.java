@@ -5,11 +5,13 @@ import com.caroba.fiap.hospital.agendamento_service.dto.response.UsuarioResponse
 import com.caroba.fiap.hospital.agendamento_service.exception.ResourceNotFoundException;
 import com.caroba.fiap.hospital.agendamento_service.model.Usuario;
 import com.caroba.fiap.hospital.agendamento_service.repository.UsuarioRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 public class UsuarioService {
 
@@ -22,6 +24,9 @@ public class UsuarioService {
     }
 
     public UsuarioResponseDTO criarUsuario(CriarUsuarioRequestDTO dto){
+        log.info("Criando usuário - nome={}, email={}, role={}",
+                dto.nome(), dto.email(), dto.role().name());
+
         Usuario usuario = new Usuario();
         usuario.setNome(dto.nome());
         usuario.setEmail(dto.email());
@@ -29,7 +34,11 @@ public class UsuarioService {
         usuario.setRole(dto.role());
         usuario.setAtivo(true);
 
-        return toResponseDTO(repository.save(usuario));
+        usuario = repository.save(usuario);
+
+        log.info("Usuário criado com sucesso - ID={}", usuario.getId());
+
+        return toResponseDTO(usuario);
     }
 
     public List<UsuarioResponseDTO> listarUsuarios(){
