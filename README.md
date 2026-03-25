@@ -224,7 +224,7 @@ POST /consultas
 ```
 ---
 
-### 🔹 Criar consulta
+### 🔹 Atualizar consulta
 
 ```http
 PATCH /consultas/1
