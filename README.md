@@ -12,6 +12,12 @@ O sistema permite:
 * Notificações de eventos
 * Registro de histórico de ações
 
+## 🔗 Repositório
+
+O código-fonte também está disponível em:
+
+https://github.com/RafaelCaroba/tech-challenge-fase3#
+
 ---
 
 ## 🧠 Arquitetura
