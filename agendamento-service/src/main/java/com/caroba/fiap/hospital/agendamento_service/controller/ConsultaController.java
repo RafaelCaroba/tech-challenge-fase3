@@ -27,14 +27,14 @@ public class ConsultaController {
     // CRIAR CONSULTA - MÉDICO/ENFERMEIRO
     @PreAuthorize("hasAnyRole('MEDICO', 'ENFERMEIRO')")
     @PostMapping
-    public ResponseEntity<ConsultaResponseDTO> criar(@Valid @RequestBody CriarConsultaRequestDTO dto){
+    public ResponseEntity<ConsultaResponseDTO> criar(@Valid @RequestBody CriarConsultaRequestDTO dto) {
         ConsultaResponseDTO consultaResponseDTO = service.criarConsulta(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(consultaResponseDTO);
     }
 
     @PreAuthorize("hasAnyRole('MEDICO', 'ENFERMEIRO')")
     @GetMapping
-    public ResponseEntity<List<ConsultaResponseDTO>> listarConsultas(){
+    public ResponseEntity<List<ConsultaResponseDTO>> listarConsultas() {
         List<ConsultaResponseDTO> consultas = service.listar();
 
         return ResponseEntity.ok(consultas);
@@ -54,20 +54,9 @@ public class ConsultaController {
     @PreAuthorize("hasAnyRole('MEDICO')")
     @PatchMapping("/{id}")
     public ResponseEntity<ConsultaResponseDTO> editarConsulta(@RequestBody @Valid AtualizarConsultaRequestDTO dto,
-                                                   @PathVariable Long id) {
+                                                              @PathVariable Long id) {
         ConsultaResponseDTO consulta = service.atualizarConsulta(dto, id);
 
         return ResponseEntity.ok(consulta);
     }
-
-    // PATCH /consultas/{id}/cancelar
-    // TODO: Endpoint de cancelar consulta
-    @PatchMapping("/{id}/cancelar")
-    public Consulta cancelarConsulta(@RequestParam Long id) {
-        return null;
-    }
-
-    // HISTÓRICO
-    // GET /historico/paciente/{id}
-    // TODO: IMPLEMENTAR ENDPOINT DE HISTÓRICO
 }

@@ -1,6 +1,16 @@
-version: "3.8"
-
 services:
+
+  postgres:
+    image: postgres:15
+    container_name: postgres-hospital
+    environment:
+      POSTGRES_DB: hospital
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    networks:
+      - hospital-network
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -8,3 +18,47 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    networks:
+      - hospital-network
+
+  agendamento-service:
+    build: ./agendamento-service
+    container_name: agendamento-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - rabbitmq
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - hospital-network
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - rabbitmq
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - hospital-network
+
+  history-service:
+    build: ./history-service
+    container_name: history-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+      - rabbitmq
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - hospital-network
+
+networks:
+  hospital-network:
+    driver: bridge
